@@ -90,10 +90,10 @@ def getunchecked(_list:list, timeout:int, limit:int, url:str, _type:str):
 
 def main():
 	system("")
-	system("color d")
 
 	while True:
 		system("cls")
+		system("color d")
 		print(proxies_creator)
 
 		choice = input("what do you want? [all, http, https, socks4, socks5] >>> ")
