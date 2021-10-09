@@ -1,6 +1,6 @@
-from os import system
 from time import monotonic
-from urllib import request, error
+from urllib import request
+from os import system, makedirs
 
 proxies_creator = """
 				██████╗ ██████╗  ██████╗ ██╗  ██╗██╗███████╗███████╗     ██████╗██████╗ ███████╗ █████╗ ████████╗ ██████╗ ██████╗ 
@@ -39,8 +39,10 @@ socks5_links = [
 ]
 
 def getchecked(proxies_unchecked:list, timeout:int, limit:int, url:str, _type:str):
-	i=0
-
+	i = 0
+	number = len(proxies_unchecked)
+	makedirs("checked_proxies/", exist_ok=True)
+	
 	for proxy in proxies_unchecked:
 		proxy_handler = request.ProxyHandler({
 		"http": "http://" + proxy,
@@ -55,14 +57,14 @@ def getchecked(proxies_unchecked:list, timeout:int, limit:int, url:str, _type:st
 			before = monotonic()
 			response = request.urlopen(url, timeout=timeout)
 
-			i+=1
-			print(f"\033[32m[+] {proxy} | timeout = {int(monotonic() - before)}\033[0m")
+			i += 1
+			print(f"\033[32m[+] {i}/{number} | {proxy} | timeout = {int(monotonic() - before)}\033[0m")
 
-			with open(f"{_type}_proxies_checked.txt", "a+") as file:
+			with open(f"checked_proxies/{_type}_checked_proxies.txt", "a+") as file:
 				file.write(proxy + "\n")
 
 		except:
-			print(f"\033[31m[-] {proxy} | timout = {int(monotonic() - before)}\033[0m")
+			print(f"\033[31m[-] {i}/{number} | {proxy} | timout = {int(monotonic() - before)}\033[0m")
 
 		if limit:
 			if limit == i:
@@ -72,16 +74,23 @@ def getchecked(proxies_unchecked:list, timeout:int, limit:int, url:str, _type:st
 	input()
 
 def getunchecked(_list:list, timeout:int, limit:int, url:str, _type:str):
+	j = 0
 	proxies_unchecked = []
+	makedirs("unchecked_proxies/", exist_ok=True)
 
-	for link in _list:
-		response = request.urlopen(link).read().decode("utf-8")
+	for url in _list:
+		try:
+			req = request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})  
+			response = request.urlopen(req).read().decode("utf-8")
 
-		for proxy in response.splitlines():
-			proxies_unchecked.append(proxy)
-			print(proxy)
+		except:
+			pass
 
-	with open(f"{_type}_unchecked_proxies.txt", "w") as file:
+		else:
+			for proxy in response.splitlines():
+				proxies_unchecked.append(proxy)
+
+	with open(f"unchecked_proxies/{_type}_unchecked_proxies.txt", "w") as file:
 		file.write(str(proxies_unchecked))
 
 	system("cls")
@@ -100,7 +109,7 @@ def main():
 		timeout = int(input("timeout >>> "))
 		limit = input("Enter limit proxies or None >>> ")
 
-		if limit in ["N", "n", "None", "none"]:
+		if limit.lower() in ["n", "no", "none"]:
 			limit = None
 
 		if choice == "all":
